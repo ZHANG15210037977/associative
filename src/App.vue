@@ -4,48 +4,69 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-05 11:40:16
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-05 18:20:26
+ * @LastEditTime: 2022-03-07 00:12:05
 -->
 <script setup>
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
+import { ref } from 'vue'
 import AssociativeInput from './components/AssociativeInput.vue';
 import icon1 from '../public/img/1.jpeg'
 import icon2 from '../public/img/2.jpg'
 import icon3 from '../public/img/3.jpg'
 
-const contactList = [
+const contactList = ref([
   {
-    value: '张桂军',
-    uid: 1,
-    iconUrl: icon1,
+    label: '张桂军',
+    value: 1,
+    url: icon1,
   },
   {
-    value: '崔亮',
-    uid: 2,
-    iconUrl: icon2,
+    label: '崔亮',
+    value: 2,
+    url: icon2,
   },
   {
-    value: '赵旭',
-    uid: 3,
-    iconUrl: icon3,
+    label: '赵旭',
+    value: 3,
+    url: icon3,
   },
   {
-    value: '李龙',
-    uid: 4,
-    iconUrl: icon1,
+    label: '李龙',
+    value: 4,
+    url: icon1,
   },
-]
+  {
+    label: '无名',
+    value: 5,
+    url: icon2,
+  },
+  {
+    label: '小灰灰',
+    value: 6,
+    url: icon3,
+  },
+])
+const value = ref(null)
+
+const handleChangeValue = (val) => {
+  value.value = val
+}
+
 </script>
 
 <template>
-  <AssociativeInput
-    msg="Hello Vue 3 + Vite"
-    :contactList="contactList"
-  />
+  <div class="associativeInput-wreap">
+    <AssociativeInput
+      :value="value"
+      :contactList="contactList"
+      @change="handleChangeValue"
+    />
+  </div>
 </template>
 
 <style>
+html{
+  height: 100%;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -53,5 +74,9 @@ const contactList = [
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+.associativeInput-wreap{
+  padding: 100px;
 }
 </style>
