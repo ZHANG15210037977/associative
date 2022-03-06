@@ -4,7 +4,7 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-05 11:40:16
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 00:18:13
+ * @LastEditTime: 2022-03-07 01:08:19
 -->
 <script setup>
   import { ref, computed,  watchEffect, toRaw, toRefs, onMounted, nextTick } from 'vue'
@@ -188,7 +188,7 @@
     const preSymbol = str.slice(targeKeySymbolIndex - 1, targeKeySymbolIndex) // 筛选前置字符，生效关键字符  前一个字符值
     const reactStr = str.slice(targeKeySymbolIndex + 1) // 筛选字符，最后一个生效关键字符 后 筛选区域字符
     if (reactStr.indexOf(' ') !== -1) return [false] // 筛选字符中 有空格，关闭
-    if (/^[A-Za-z0-9]*$/.test(preSymbol)) return [false] // 筛选前置字符为数字或字母，可能要输入值为邮箱, 关
+    if (/^[A-Za-z0-9]*$/.test(preSymbol) && preSymbol !== '') return [false] // 筛选前置字符为数字或字母，可能要输入值为邮箱, 关
     const newContactListArr = contactListArr.filter(item => fillterContactFn(item.label, reactStr)) // 筛选出匹配联系人
     if (newContactListArr.length <= 0) return [false]
     return [true, newContactListArr, getTargeKeySymbolXoy(reactStr.length)]
@@ -281,17 +281,27 @@
       targeInput.value = ''
     }
   }
+
+  defineExpose({
+    handleInputChange
+  })
 </script>
 
 <template>
-  <el-input
-    id="inputBox"
-    v-model="showMsg"
-    type="textarea"
-    placeholder="Please input"
-    :rows="3"
-    @input="handleInputChange"
-  />
+  <slot 
+    :value="showMsg"
+    :id="'inputBox'"
+  >
+    <el-input
+      id="inputBox"
+      v-model="showMsg"
+      type="textarea"
+      placeholder="Please input"
+      slot="form-item"
+      :rows="3"
+      @input="handleInputChange"
+    />
+  </slot>
   <ContactSelect
     ref="contactRef"
     v-show="showContactSelectKey"

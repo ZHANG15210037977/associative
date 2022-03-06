@@ -4,7 +4,7 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-05 11:40:16
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 00:12:05
+ * @LastEditTime: 2022-03-07 01:12:17
 -->
 <script setup>
 import { ref } from 'vue'
@@ -47,19 +47,36 @@ const contactList = ref([
 ])
 const value = ref(null)
 
+const associativeInputRef = ref(null)
+
 const handleChangeValue = (val) => {
   value.value = val
 }
 
+const handleInput = (value) => {
+  associativeInputRef?.value?.handleInputChange(value)
+}
 </script>
 
 <template>
   <div class="associativeInput-wreap">
     <AssociativeInput
+      v-slot="slot"
+      ref="associativeInputRef"
       :value="value"
       :contactList="contactList"
       @change="handleChangeValue"
-    />
+    >
+      <el-input 
+        v-model="slot.value"
+        placeholder="请输入"
+        type="textarea"
+        :id="slot.id"
+        @input="handleInput"
+        :rows="5"
+      />
+      {{slotProps}}
+    </AssociativeInput>
   </div>
 </template>
 
