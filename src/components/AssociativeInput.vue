@@ -4,7 +4,7 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-05 11:40:16
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 17:47:28
+ * @LastEditTime: 2022-03-07 21:12:23
 -->
 <script setup>
   import { ref, computed,  watchEffect, toRaw, toRefs, onMounted, nextTick } from 'vue'
@@ -29,6 +29,8 @@
   const showContactList = ref([])
   const showTop = ref(0)
   const showLeft = ref(0)
+  let isProcess = null
+  let clickPos = null
 
   onMounted(() => {
     document.onmouseup = function(e =  window.event){
@@ -208,7 +210,6 @@
   // 找出何处减少，计算出pos，通知消息盒子更新信息
   const removeSomeSymbol = (event) => {
     const { target } = event
-    const { value } = target
     const posStart = target.selectionStart
     const posEnd = target.selectionEnd
     removeSomeSymbolToPos(posStart, posEnd)
@@ -219,7 +220,6 @@
     const { target, key } = event
     const posStart = target.selectionStart
     const posEnd = target.selectionEnd
-    console.log('event:', event)
     if (posStart === posEnd) {
       addSomeSymbolToPos(key, posStart)
     } else {
@@ -230,20 +230,54 @@
 
   // 键盘弹起回调
   const handleKeydown = (e) => {
-    const noInputKey = ['Meta', 'Alt', 'Control', 'Shift', 'Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'CapsLock', 'Tab', 'Process']
+    const noInputKey = ['Meta', 'Alt', 'Control', 'Shift', 'Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'CapsLock', 'Tab']
     const { keyCode, key } = e || {}
+    isProcess = null
     if (!keyCode) return
     if (keyCode === 8) {
       // 删除
       removeSomeSymbol(e)
+    } else if ( key === 'Process') { // 点击时记录了 坐标信息 & 文本信息，且当前为输入法录入，记录
+      if (clickPos) isProcess = { ...clickPos }
     } else if (!noInputKey.includes(key)) {
       // 新增
       addSomeSymbol(e)
     }
   }
 
+  const handleInput = (newVal) => {
+    if (isProcess) { // 如果中文输入信息存在
+      const { posStart, posEnd, value } = isProcess
+      const targeStrLen = newVal.length - value.length
+      const targeStr = newVal.slice(posStart, posStart + targeStrLen)
+      addSomeSymbolToPos(targeStr, posStart)
+      clickPos = isProcess = null
+      nextTick(() => {
+        const target = document.getElementById('inputBox')
+        const { selectionStart, selectionEnd, value } = target || {}
+        clickPos = {
+          posStart: selectionStart,
+          posEnd: selectionEnd,
+          value
+        }
+      })
+    }
+  }
+
+  const handleClick = (event) => {
+    const { target } = event || {}
+    const { selectionStart, selectionEnd, value } = target || {}
+    clickPos = {
+      posStart: selectionStart,
+      posEnd: selectionEnd,
+      value
+    }
+  }
+
   defineExpose({
     handleKeydown,
+    handleInput,
+    handleClick,
   })
 </script>
 
@@ -259,6 +293,8 @@
       placeholder="Please input"
       :rows="3"
       @keydown="handleKeydown"
+      @input="handleInput"
+      @click="handleClick"
     />
   </slot>
   <ContactSelect

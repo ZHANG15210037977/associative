@@ -4,7 +4,7 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-07 09:50:25
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 16:59:57
+ * @LastEditTime: 2022-03-07 20:55:34
  */
 import { ref, computed } from 'vue'
 import Msg from './Msg'
@@ -53,8 +53,11 @@ export default function MsgStack () {
   const addRelMsg = (data) => {
     const newMsgStack = [...msgStack.value]
     const lastMsg = newMsgStack[newMsgStack.length - 1]
+    // 计算覆盖裁剪区域
     const lastMsgLen = lastMsg.render.length
-    lastMsg.remove(lastMsgLen - 1, lastMsgLen)
+    const lastMshArr = lastMsg.render.split('@')
+    const splitStr = lastMshArr.pop().length + 1
+    lastMsg.remove(lastMsgLen - splitStr, lastMsgLen)
     newMsgStack.push(new Msg(data, 'rel'))
     msgStack.value = newMsgStack
     levelingMsgData()

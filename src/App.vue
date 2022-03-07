@@ -4,7 +4,7 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-05 11:40:16
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 17:05:37
+ * @LastEditTime: 2022-03-07 21:06:50
 -->
 <script setup>
 import { ref } from 'vue'
@@ -56,6 +56,12 @@ const handleChangeValue = (val) => {
 const handleKeydown = (e) => {
   associativeInputRef?.value?.handleKeydown(e)
 }
+const handleInput = (e) => {
+  associativeInputRef?.value?.handleInput(e)
+}
+const handleClick = (e) => {
+  associativeInputRef?.value?.handleClick(e)
+}
 
 </script>
 
@@ -74,6 +80,9 @@ const handleKeydown = (e) => {
         type="textarea"
         :id="slot.id"
         @keydown="handleKeydown"
+        @input="handleInput"
+        @click="handleClick"
+        @focus="handleClick"
         :rows="3"
       />
     </AssociativeInput>
