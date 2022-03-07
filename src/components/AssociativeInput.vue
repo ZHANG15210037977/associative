@@ -4,7 +4,7 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-05 11:40:16
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 17:12:38
+ * @LastEditTime: 2022-03-07 17:47:28
 -->
 <script setup>
   import { ref, computed,  watchEffect, toRaw, toRefs, onMounted, nextTick } from 'vue'
@@ -219,6 +219,7 @@
     const { target, key } = event
     const posStart = target.selectionStart
     const posEnd = target.selectionEnd
+    console.log('event:', event)
     if (posStart === posEnd) {
       addSomeSymbolToPos(key, posStart)
     } else {
@@ -229,7 +230,7 @@
 
   // 键盘弹起回调
   const handleKeydown = (e) => {
-    const noInputKey = ['Meta', 'Alt', 'Control', 'Shift', 'Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
+    const noInputKey = ['Meta', 'Alt', 'Control', 'Shift', 'Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'CapsLock', 'Tab', 'Process']
     const { keyCode, key } = e || {}
     if (!keyCode) return
     if (keyCode === 8) {
