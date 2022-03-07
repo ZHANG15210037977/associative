@@ -4,7 +4,7 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-05 11:40:16
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 17:07:31
+ * @LastEditTime: 2022-03-07 17:12:38
 -->
 <script setup>
   import { ref, computed,  watchEffect, toRaw, toRefs, onMounted, nextTick } from 'vue'
@@ -217,8 +217,14 @@
   // 找出何处增多，计算出pos，通知消息盒子更新信息
   const addSomeSymbol = (event) => {
     const { target, key } = event
-    const pos = target.selectionStart
-    addSomeSymbolToPos(key, pos)
+    const posStart = target.selectionStart
+    const posEnd = target.selectionEnd
+    if (posStart === posEnd) {
+      addSomeSymbolToPos(key, posStart)
+    } else {
+      removeSomeSymbolToPos(posStart, posEnd)
+      addSomeSymbolToPos(key, posStart)
+    }
   }
 
   // 键盘弹起回调
