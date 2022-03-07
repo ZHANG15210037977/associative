@@ -4,13 +4,14 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-05 11:40:16
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 01:08:19
+ * @LastEditTime: 2022-03-07 17:07:31
 -->
 <script setup>
   import { ref, computed,  watchEffect, toRaw, toRefs, onMounted, nextTick } from 'vue'
   import $ from 'jquery'
   import PinyinMatch from 'pinyin-match';
   import ContactSelect from './ContactSelect.vue'
+  import MsgStack from './MsgStack'
 
   const { contactList } = defineProps({
     value: Object,
@@ -19,11 +20,8 @@
 
   const emits  = defineEmits(['change'])
 
-  // 当前有效的编辑区域，未塌缩，进行录入规则命中 
-  const targeInput = ref('')
-
-  // 已经塌缩的消息栈。type为 'text' 文本消息，'rel' 关联消息。
-  const msgStack = ref([])
+  // 初始化消息盒子
+  const { msgStack, msgStackStr, addSomeSymbolToPos, removeSomeSymbolToPos, addRelMsg } = MsgStack()
   
   // 是否展示关联弹窗&展示数据
   const contactRef = ref(null)
@@ -52,26 +50,6 @@
       reslut.set(value, item)
     })
     return reslut
-  })
-
-  // 根据消息栈，计算确定的展示文本
-  const msgStackStr = computed(() => {
-    return msgStack.value.reduce((pre, item) => {
-      const { type, data } = item || {}
-      switch (type) {
-        case 'text': 
-          return `${pre}${data}`
-          break;
-        case 'rel':
-          return `${pre}@${data.label || ''} `
-          break;
-      }
-    }, '')
-  })
-  
-  // 计算 展示给客户的全量消息文本
-  const showMsg = computed(() => {
-    return `${msgStackStr.value}${targeInput.value}`
   })
 
   // 用于匹配联系人，最基础字符匹配
@@ -197,7 +175,7 @@
   // 录入区值变动时，进行解析
   watchEffect(() => {
     // 获取解析结果
-    const [showKey, newContactListArr , pos] = showContactBoxRules(targeInput.value, contactList)
+    const [showKey, newContactListArr , pos] = showContactBoxRules(`${msgStackStr.value}`, contactList)
     if (showKey) { // 展示
       showContactList.value = newContactListArr
       showContactSelectKey.value = true
@@ -214,92 +192,66 @@
   // 对外change事件
   watchEffect(() => {
     emits('change', [
-      ...msgStack.value,
-      {
-        type: 'text',
-        data: targeInput.value
-      }
+      ...msgStack.value
     ])
   })
 
-  // 输入新增处理
-  const inputAddFn = (value) => {
-    // 新增，更新输入解析区值
-    targeInput.value = value.replace(msgStackStr.value, '')
-  }
-
-  // 输入减少处理
-  const inputRedFn = (value) => {
-    if (value.length >= msgStackStr.value.length) {
-      // 减少，但仍比 消息栈串 多（即不需要弹出消息栈）
-      targeInput.value = value.replace(msgStackStr.value, '')
-    } else if (msgStackStr.value.indexOf(value) !== -1) { // 正常减小值
-      const msgStackLen = msgStack.value.length
-      // 待优化
-      const lastItem = msgStack.value[msgStackLen - 1]
-      const { type, data } = lastItem || {}
-      switch (type) {
-        case 'text': 
-          msgStack.value = msgStack.value.slice(0, msgStackLen - 1)
-          targeInput.value = data.slice(0, data.length - 1)
-          break;
-        case 'rel':
-          msgStack.value = msgStack.value.slice(0, msgStackLen - 1)
-          targeInput.value = ' '
-          break;  
-      }
-    } else { // 输入如关联，则清空
-      targeInput.value = value
-      msgStack.value = []
-    }
-  }
-
-  // 输入新增回调
-  const handleInputChange = (e) => {
-    const val = `${e}`
-    val.length > showMsg.value.length ? inputAddFn(val) : inputRedFn(val)
-  }
 
   // 选择联系人回调
   const handleSelectContact = (key) => {
     const targeContactItem = contactMap.value.get(key)
     if (targeContactItem) {
-      const inputStrArr = targeInput.value.split('@')
-      inputStrArr.pop()
-      const newMsgStack = [...msgStack.value]
-      if (inputStrArr.join('@')) {
-        newMsgStack.push({
-          type: 'text',
-          data: inputStrArr.join('@')
-        })
-      }
-      newMsgStack.push({
-        type: 'rel',
-        data: targeContactItem
-      })
-      msgStack.value = newMsgStack
-      targeInput.value = ''
+      addRelMsg(targeContactItem)
+    }
+  }
+
+  // 找出何处减少，计算出pos，通知消息盒子更新信息
+  const removeSomeSymbol = (event) => {
+    const { target } = event
+    const { value } = target
+    const posStart = target.selectionStart
+    const posEnd = target.selectionEnd
+    removeSomeSymbolToPos(posStart, posEnd)
+  }
+
+  // 找出何处增多，计算出pos，通知消息盒子更新信息
+  const addSomeSymbol = (event) => {
+    const { target, key } = event
+    const pos = target.selectionStart
+    addSomeSymbolToPos(key, pos)
+  }
+
+  // 键盘弹起回调
+  const handleKeydown = (e) => {
+    const noInputKey = ['Meta', 'Alt', 'Control', 'Shift', 'Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
+    const { keyCode, key } = e || {}
+    if (!keyCode) return
+    if (keyCode === 8) {
+      // 删除
+      removeSomeSymbol(e)
+    } else if (!noInputKey.includes(key)) {
+      // 新增
+      addSomeSymbol(e)
     }
   }
 
   defineExpose({
-    handleInputChange
+    handleKeydown,
   })
 </script>
 
 <template>
   <slot 
-    :value="showMsg"
+    :value="msgStackStr"
     :id="'inputBox'"
   >
     <el-input
       id="inputBox"
-      v-model="showMsg"
+      v-model="msgStackStr"
       type="textarea"
       placeholder="Please input"
-      slot="form-item"
       :rows="3"
-      @input="handleInputChange"
+      @keydown="handleKeydown"
     />
   </slot>
   <ContactSelect
@@ -313,4 +265,7 @@
 </template>
 
 <style scoped>
+#inputBox{
+  width: 100%;
+}
 </style>
