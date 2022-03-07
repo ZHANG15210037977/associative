@@ -4,7 +4,7 @@
  * @Autor: zhangguijun8
  * @Date: 2022-03-07 09:50:25
  * @LastEditors: zhangguijun8
- * @LastEditTime: 2022-03-07 17:00:29
+ * @LastEditTime: 2022-03-07 17:34:24
  */
 class Msg {
   constructor (data = '', type = 'text',) {
@@ -15,7 +15,7 @@ class Msg {
         this.render = data
         break
       case 'rel':
-        this.render = `@${data.label} `
+        this.render = `@${data.label}`
         break
     }
   }
